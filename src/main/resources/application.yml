@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: rPi::Pool
+
+server:
+  port: 9000
+
+rpi:
+  real-gpio: ${RPI_REAL_GPIO:true}
+  read-delay-seconds: 60
+  config:
+    users: ${RPI_USERS:classpath:/config/rpi-users.json}
+    pool: ${RPI_CONFIG:classpath:/config/rpi-pool.json}
+  jwt:
+    secret: rpi&5*10*85
+    expirationInMinutes: 10080 # 7days
+  password-encoder:
+    secret: rpi&5*10*85
+    iteration: 32
+    keylength: 256
+  freemobile-notif:
+    enabled: ${RPI_FM:false}
+    user: 31584656
+    pass: augEPUn14aVFGx
+  dht11:
+    enabled: ${RPI_DHT:false}
+    url: ${RPI_DHT_SERVER:http://localhost:9090}
+    py-script: ${user.home}/dht11.py
+    temperature-threshold: 30
+
+# Logging Level
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} | ${HOSTNAME} | %t | %highlight(%-5level) | %cyan(%logger{5}) | %.-12000msg%n"
+#    file: "%d{yyyy-MM-dd HH:mm:ss} | %-5level | %logger{5} | %.-12000msg%n"
+#  file: /tmp/betsnfun.log
+#  file.max-history: 5
+#  file.max-size: 10MB
+  level:
+    org:
+      springframework: ERROR
+    reactor:
+      netty: ERROR
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

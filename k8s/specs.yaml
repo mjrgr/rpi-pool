@@ -1,0 +1,146 @@
+#  kubectl describe secret kubernetes-dashboard --namespace=kube-system
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rpi-pool-config
+data:
+  rpi-pool.json: |
+    [
+    {
+      "id": "pump",
+      "label": "Pump",
+      "type": "PUMP",
+      "pinNumber": "9",
+      "enabled": "true"
+    },
+    {
+      "id": "light",
+      "label": "Light",
+      "type": "LIGHT",
+      "pinNumber": "7",
+      "enabled": "true"
+    },
+    {
+      "id": "waterfall",
+      "label": "Cascade",
+      "type": "CUSTOM",
+      "pinNumber": "15",
+      "enabled": "false"
+    }
+    ]
+  rpi-users.json: |
+    [
+    {
+      "username": "admin",
+      "password": "c79f1ed997f9f11d69ce8f7b3e7efc3603b4de97f66f2642c17ea0dd6f71f5c8a4d442c209defe59",
+      "admin": "true"
+    },
+    {
+      "username": "bazinga",
+      "password": "ee054dc61d051eda1338a352440151149ac979b4cb9347e75559efd94aea88bf9e59bdfcc2028174",
+      "admin": "false"
+    }
+    ]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rpi-pool-app
+spec:
+  type: NodePort
+  selector:
+    app: rpi-pool-app
+  ports:
+    - port: 9000
+      targetPort: 9000
+      nodePort: 30001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rpi-pool-app
+spec:
+  selector:
+    matchLabels:
+      app: rpi-pool-app
+  replicas: 2
+  template:
+    metadata:
+      name: rpi-pool-app
+      labels:
+        app: rpi-pool-app
+    spec:
+      containers:
+        - name: rpi-pool-app
+          image: rpi-ws:dev
+          ports:
+            - containerPort: 9000
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9000
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9000
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 1
+          env:
+#            - name: SPRING_PROFILES_ACTIVE
+#              value: "dev"
+            - name: RPI_REAL_GPIO
+              value: "false"
+            - name: RPI_DHT
+              value: "true"
+            - name: RPI_DHT_SERVER
+              value: "http://rpi-pool-dht11:9090"
+            - name: RPI_USERS
+              value: "file:/config/rpi-users.json"
+            - name: RPI_CONFIG
+              value: "file:/config/rpi-pool.json"
+          volumeMounts:
+            - mountPath: "/config"
+              name: config
+      volumes:
+        - name: config
+          configMap:
+            name: rpi-pool-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rpi-pool-dht11
+spec:
+  type: ClusterIP
+  selector:
+    app: rpi-pool-dht11
+  ports:
+    - port: 9090
+      targetPort: 9090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rpi-pool-dht11
+spec:
+  selector:
+    matchLabels:
+      app: rpi-pool-dht11
+  replicas: 1
+  template:
+    metadata:
+      name: rpi-pool-dht11
+      labels:
+        app: rpi-pool-dht11
+    spec:
+      containers:
+        - name: rpi-pool-dht11
+          image: rpi-dht11:dev
+          ports:
+            - containerPort: 9090

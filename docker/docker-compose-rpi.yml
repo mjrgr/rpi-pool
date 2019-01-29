@@ -1,0 +1,22 @@
+version: '3.7'
+services:
+  rpi-pool:
+    image: rpi-pool:rpi
+    build:
+      args:
+        baseImage: jsurf/rpi-java
+    environment:
+    - SPRING_PROFILES_ACTIVE=
+    - RPI_REAL_GPIO=true
+    privileged: true
+
+  dht11:
+    image: rpi-dht11:rpi
+    build:
+      args:
+        baseImage: farshidtz/adafruit_dht
+    container_name: dht11
+    restart: always
+    entrypoint: python
+    command: dht11.py --ws --no-mock
+    privileged: true

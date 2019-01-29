@@ -1,0 +1,14 @@
+*.iml
+.idea
+.tmp
+build
+bin
+.gradle
+.settings
+generated
+output
+*.log
+dist
+node_modules
+.DS_Store
+out

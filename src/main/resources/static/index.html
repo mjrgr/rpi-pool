@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Rpi Pool UI</title>
+
+
+    <link href="/rpi-pool/css/metro.min.css" rel="stylesheet">
+    <link href="/rpi-pool/css/metro-icons.min.css" rel="stylesheet">
+    <link href="/rpi-pool/css/metro-colors.min.css" rel="stylesheet">
+    <link href="/rpi-pool/css/metro-responsive.min.css" rel="stylesheet">
+    <script data-main="scripts/main" src="/rpi-pool/js/jquery.js"></script>
+    <script data-main="scripts/main" src="/rpi-pool/js/metro.min.js"></script>
+
+    <style type="text/css">
+        .rpi-big-button {
+            outline: none;
+            font-family: 'helvetica neue', 'sans-serif';
+            font-size: 2em;
+            color: white;
+            text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.7), 1px 1px 1px rgba(255, 255, 255, 0.3);
+            display: block;
+            margin: 2em auto;
+            padding: 23px 37px 25px 35px;
+            cursor: pointer;
+            background: #2e050c linear-gradient(273deg, #eb4763 30%, #e6193c 40%);
+            border: none;
+            border-radius: 16px;
+            box-shadow: inset 0px 0px 1px 1px rgba(138, 15, 36, 0.9), inset 0px 0px 2px 3px rgba(230, 25, 60, 0.9), inset 1px 1px 1px 4px rgba(255, 255, 255, 0.8), inset 0px 0px 2px 7px rgba(235, 71, 99, 0.8), inset 0px 0px 4px 10px rgba(230, 25, 60, 0.9), 8px 10px 2px 6px rgba(92, 10, 24, 0.55), 0px 0px 3px 2px rgba(184, 20, 48, 0.9), 0px 0px 2px 6px rgba(230, 25, 60, 0.9), -1px -1px 1px 6px rgba(255, 255, 255, 0.9), 0px 0px 2px 11px rgba(230, 25, 60, 0.9), 0px 0px 1px 12px rgba(184, 20, 48, 0.9), 1px 3px 14px 14px rgba(0, 0, 0, 0.4);
+        }
+
+        .rpi-big-button-downstate {
+            color: #d9d9d9;
+            padding: 26px 34px 22px 38px;
+            background-image: linear-gradient(273deg, #47EB63 50%, #19E63B 60%);
+            box-shadow: inset 3px 4px 3px 2px rgba(10, 92, 24, 0.55), inset 0px 0px 1px 1px rgba(15, 138, 36, 0.9), inset -1px -1px 2px 3px rgba(25, 230, 60, 0.9), inset -2px -2px 1px 3px rgba(255, 255, 255, 0.8), inset 0px 0px 2px 7px rgba(71, 235, 99, 0.8), inset 0px 0px 3px 10px rgba(25, 230, 60, 0.9), 0px 0px 3px 2px rgba(20, 184, 48, 0.9), 0px 0px 2px 6px rgba(25, 230, 60, 0.9), -1px -1px 1px 6px rgba(255, 255, 255, 0.9), 0px 0px 2px 11px rgba(25, 230, 60, 0.9), 0px 0px 1px 12px rgba(20, 184, 48, 0.9), 1px 3px 14px 14px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+
+    <script>
+        var ROOT_WS_URL = "/api/v1";
+    </script>
+
+    <!--&lt;!&ndash; @if RPI_ENV='dev' &ndash;&gt;-->
+    <!--<script>-->
+        <!--ROOT_WS_URL = "http://localhost:9000/api/v1";-->
+    <!--</script>-->
+    <!--&lt;!&ndash; @endif &ndash;&gt;-->
+
+    <script>
+        var POOL_WS_URL = ROOT_WS_URL + "/pool";
+        var TOKEN = "token";
+
+        var sections = ["switches", "sensors"/*, "settings"*/];
+        var switchesRefreshId, sensorsRefreshId;
+        var logged;
+
+        (function ($) {
+            $.each(['show', 'hide'], function (i, ev) {
+                var el = $.fn[ev];
+                $.fn[ev] = function () {
+                    this.trigger(ev);
+                    return el.apply(this, arguments);
+                };
+            });
+        })(jQuery);
+
+        function initForm() {
+            var form = $("#loginForm");
+            form.find("input[name='username']").val("");
+            form.find("input[name='password']").val("");
+        }
+
+        function getRelay(relays, id) {
+            for (var i = 0; i < relays.length; i++) {
+                if (relays[i].id === id) {
+                    return relays[i];
+                }
+            }
+            throw new ReferenceError("id:" + id + " not found");
+        }
+
+        function initButtonState(relays, id) {
+            var relay = getRelay(relays, id);
+            if (relay.state) {
+                $('#' + relay.id).addClass('rpi-big-button-downstate');
+            } else {
+                $('#' + relay.id).removeClass('rpi-big-button-downstate');
+            }
+        }
+
+        function toggleButtonState(relays, id) {
+            var relay = getRelay(relays, id);
+
+            $.ajax({
+                type: 'PUT',
+                url: POOL_WS_URL + '/' + relay.id + '/toggle',
+                success: function () {
+                    if (relay.state) {
+                        relay.state = false;
+                        $('#' + relay.id).removeClass('rpi-big-button-downstate');
+                    } else {
+                        relay.state = true;
+                        $('#' + relay.id).addClass('rpi-big-button-downstate');
+                    }
+                },
+                error: function () {
+                    $.Notify({
+                        caption: 'Error',
+                        content: 'toggle failed',
+                        type: 'alert'
+                    });
+                },
+                contentType: "application/json"
+            });
+        }
+
+        function makeLoginOrLogoutVisible() {
+            if (logged) {
+                $('#logoutdiv').show();
+                $('#logindiv').hide();
+            } else {
+                $('#logoutdiv').hide();
+                $('#logindiv').show();
+            }
+        }
+
+        var err401 = function (x, status, error) {
+            if (x.status == 401) {
+                localStorage.removeItem(TOKEN)
+                $.Notify({
+                    caption: 'token',
+                    content: 'error:'+error,
+                    type: 'alert'
+                });
+            }
+            check()
+        }
+
+        function check() {
+            if (localStorage.getItem(TOKEN) === null) {
+                logged = false;
+                $.ajaxSetup({
+                    headers: {},
+                    error: err401
+                });
+            } else {
+
+                logged = true;
+                $.ajaxSetup({
+                    headers: {
+                        'Authorization': localStorage.getItem(TOKEN)
+                    },
+                    error: err401
+                });
+            }
+            makeLoginOrLogoutVisible()
+            showSection("switches");
+        }
+
+        function processToken(token) {
+            if (token) {
+                localStorage.setItem(TOKEN, token.tokenType + " " + token.token)
+                hideDialog('loginlogout');
+                check();
+            } else {
+                $.Notify({
+                    caption: 'login',
+                    content: 'Operation failed',
+                    type: 'alert'
+                });
+            }
+        }
+
+        $().ready(function () {
+
+            $("#loginForm").submit(function (event) {
+
+                event.preventDefault();
+                var form = $(this),
+                    uname = form.find("input[name='username']").val(),
+                    passwd = form.find("input[name='password']").val();
+
+                if (uname.length === 0 || passwd.length === 0) return;
+
+                $.ajax({
+                    type: 'POST',
+                    url: ROOT_WS_URL + '/security/signin',
+                    data: JSON.stringify({username: uname, password: passwd}),
+                    success: function (token) {
+                        processToken(token);
+                    },
+                    error: function () {
+                        $.Notify({
+                            caption: 'Error',
+                            content: 'Login failed',
+                            type: 'alert'
+                        });
+                    },
+                    contentType: "application/json",
+                    dataType: 'json'
+                });
+            });
+
+            $("#logoutForm").submit(function (event) {
+
+                event.preventDefault();
+                localStorage.removeItem(TOKEN);
+                check();
+            });
+
+            $('#switches').on('show', function () {
+                redrawSwitches();
+                switchesRefreshId = setInterval(redrawSwitches, 90000);
+            });
+
+            $('#switches').on('hide', function () {
+                if (switchesRefreshId !== undefined) {
+                    clearInterval(switchesRefreshId);
+                }
+            });
+
+            $('#sensors').on('show', function () {
+                fillSensorsValues();
+                sensorsRefreshId = setInterval(fillSensorsValues, 60000);
+            });
+
+            $('#sensors').on('hide', function () {
+                if (sensorsRefreshId !== undefined) {
+                    clearInterval(sensorsRefreshId);
+                }
+            });
+
+            check();
+
+            $().ajaxError(function(e){
+                alert("An error occured!: "+e);
+            });
+        });
+
+        function redrawSwitches() {
+            console.log('redrawing switches');
+            $('#switches').empty();
+            $.getJSON(POOL_WS_URL + '/relays', function (relays) {
+                for (var i = 0; i < relays.length; i++) {
+                    $('#switches').append($('<button>', {
+                        class: 'rpi-big-button',
+                        id: relays[i].id,
+                        text: relays[i].label
+                    }));
+                }
+                $(".rpi-big-button").each(function (i, button) {
+
+                    initButtonState(relays, button.id);
+                    $('#' + button.id).on('click', function () {
+                        toggleButtonState(relays, $(this)[0].id);
+                    });
+                });
+            });
+        }
+
+        function fillSensorsValues() {
+            console.log('redrawing sensors');
+            $('#sensorsContent').empty();
+            $.getJSON(POOL_WS_URL + '/sensors', function (sensorsValues) {
+                for (var i = 0; i < sensorsValues.length; i++) {
+                    var ctr = $('<tr>');
+                    ctr.append($('<td>', {
+                        text: sensorsValues[i].name
+                    }));
+                    ctr.append($('<td>', {
+                        text: sensorsValues[i].value + ' ' + sensorsValues[i].unit
+                    }));
+                    $('#sensorsContent').append(ctr);
+                }
+            });
+        }
+
+        function showSection(id) {
+
+            for (var i = 0; i < sections.length; i++) {
+                hideSection(sections[i]);
+            }
+            if (!logged) {
+                showDialog("loginlogout");
+                return;
+            }
+            var div = $('#' + id);
+            div.show();
+        }
+
+        function hideSection(id) {
+            var div = $('#' + id);
+            div.hide();
+        }
+
+        function showDialog(id) {
+            showMetroDialog($('#' + id), 'top-center');
+        }
+
+        function hideDialog(id) {
+            hideMetroDialog($('#' + id))
+        }
+    </script>
+</head>
+<body class="ribbed-grayDark">
+
+<div class="app-bar darcula" data-role="appbar">
+    <ul class="app-bar-menu">
+        <li><a href="#" onclick="showSection('switches');">Switches</a></li>
+        <li><a href="#" onclick="showSection('sensors');">Sensors</a></li>
+        <!--<li><a href="#" onclick="showSection('settings');">Settings</a></li>-->
+    </ul>
+    <div class="app-bar-element place-right" onclick="initForm(); showDialog('loginlogout');">
+        <a class="fg-white"><span class="mif-users mif-3x"></span></a>
+    </div>
+</div>
+
+<div id="switches"></div>
+
+<div id="sensors">
+    <table bgcolor="#f8f8ff" class="table border bordered hovered cell-hovered">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Value</th>
+        </tr>
+        </thead>
+        <tbody id="sensorsContent">
+        <!-- to fill dynamically -->
+        </tbody>
+    </table>
+</div>
+
+<div id="loginlogout" data-role="dialog" class="padding10" data-overlay="true" data-overlay-color="op-dark">
+    <div id="logindiv" class="login-form padding20 block-shadow">
+        <form id="loginForm" data-role="validator">
+            <h1 class="text-light">Login</h1>
+            <hr class="thin"/>
+            <div class="input-control text full-size" data-role="input">
+                <span class="mif-user prepend-icon"></span>
+                <input type="text" data-validate-func="required" name="username">
+                <button class="button helper-button clear"><span class="mif-cross"></span></button>
+            </div>
+            <br/>
+            <div class="input-control password full-size" data-role="input">
+                <span class="mif-lock prepend-icon"></span>
+                <input type="password" data-validate-func="required" name="password">
+                <button class="button helper-button reveal"><span class="mif-looks"></span></button>
+            </div>
+
+            <div class="form-actions">
+                <input type="submit" class="button" value="Login"/>
+                <a class="button link" onclick="hideDialog('loginlogout');">Cancel</a>
+            </div>
+        </form>
+    </div>
+    <div id="logoutdiv">
+        <h2>Logout</h2>
+
+        <form id="logoutForm">
+            <div class="form-actions">
+                <input type="submit" class="button" value="Logout"/>
+                <a class="button link" onclick="hideDialog('loginlogout');">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

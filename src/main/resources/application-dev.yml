@@ -1,0 +1,13 @@
+spring:
+  profiles:
+    include: swagger
+
+rpi:
+  real-gpio: false
+  pool-config: rpi-pool.json
+  freemobile-notif:
+    enabled: false
+  dht11:
+    enabled: true
+    py-script: ${java.io.tmpdir}/mock-dht11.py
+    temperature-threshold: 50

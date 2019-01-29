@@ -1,0 +1,12 @@
+[
+  {
+    "username": "admin",
+    "password": "c79f1ed997f9f11d69ce8f7b3e7efc3603b4de97f66f2642c17ea0dd6f71f5c8a4d442c209defe59",
+    "admin": "true"
+  },
+  {
+    "username": "mehdi",
+    "password": "ee054dc61d051eda1338a352440151149ac979b4cb9347e75559efd94aea88bf9e59bdfcc2028174",
+    "admin": "false"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "pump",
+    "label": "Pompe",
+    "type": "PUMP",
+    "pinNumber": "9",
+    "enabled": "true"
+  },
+  {
+    "id": "light",
+    "label": "Lumière",
+    "type": "LIGHT",
+    "pinNumber": "7",
+    "enabled": "true"
+  },
+  {
+    "id": "waterfall",
+    "label": "Cascade",
+    "type": "CUSTOM",
+    "pinNumber": "15",
+    "enabled": "false"
+  },
+  {
+    "id": "test",
+    "label": "test",
+    "type": "CUSTOM",
+    "pinNumber": "16",
+    "enabled": "false"
+  }
+]

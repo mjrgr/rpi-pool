@@ -1,0 +1,4 @@
+rpi:
+  real-gpio: false
+  dht11:
+    enabled: false

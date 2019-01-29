@@ -1,0 +1,63 @@
+version: '3.7'
+services:
+  rpi-pool:
+    image: rpi-ws:dev
+    build:
+      context: ${SCRIPT_PATH}/..
+      dockerfile: docker/rpi-ws/Dockerfile
+      args:
+        basePath: ${SCRIPT_PATH}
+        baseImage: openjdk:8-jre-alpine
+    container_name: rpi-pool
+    restart: always
+    networks:
+    - rpi-network
+    volumes:
+    - ${SCRIPT_PATH}/rpi-ws/config:/config
+    environment:
+    - TZ=Europe/Paris
+    - SPRING_PROFILES_ACTIVE=dev
+    - RPI_REAL_GPIO=false
+    - RPI_DHT_SERVER=http://dht11:9090
+    - RPI_USERS=file:/config/rpi-users.json
+    - RPI_CONFIG=file:/config/rpi-pool.json
+    ports:
+    - "8080:9000"
+
+  dht11:
+    image: rpi-dht11:dev
+    build:
+      context: ${SCRIPT_PATH}/..
+      dockerfile: docker/rpi-dht11/Dockerfile
+      args:
+        basePath: ${SCRIPT_PATH}
+        baseImage: python:2-alpine
+    container_name: dht11
+    restart: always
+    networks:
+    - rpi-network
+    environment:
+    - TZ=Europe/Paris
+    ports:
+    - "8090:9090"
+
+  # Monitoring Service
+  portainer:
+    image: portainer/portainer
+    container_name: portainer
+    restart: always
+    networks:
+      - rpi-network
+    ports:
+    - "8899:9000"
+    environment:
+    - TZ=Europe/Paris
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - portainer_data:/data
+
+networks:
+  rpi-network:
+
+volumes:
+  portainer_data:
