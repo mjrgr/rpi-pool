@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/pakohan/dht"
 	"log"
 	"math/rand"
 	"net/http"
@@ -48,10 +47,15 @@ func readSensorData() SensorData {
 	if mock {
 		return SensorData{random(-10, 55), random(0, 95)}
 	} else {
-		temperature, humidity, err := dht.GetSensorData(dht.SensorDHT11, pin)
+		temperature, humidity, retried, err :=
+			dht.ReadDHTxxWithRetry(dht.DHT11, 4, false, 10)
 		if err != nil {
 			log.Fatal(err)
+			panic(err)
 		}
+		// Print temperature and humidity
+		fmt.Printf("Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
+			temperature, humidity, retried)
 		return SensorData{int(temperature), int(humidity)}
 	}
 }

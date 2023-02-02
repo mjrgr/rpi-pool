@@ -1,7 +1,7 @@
 ARG basePath
 ARG baseImage
 
-FROM gradle:jdk8 as builder
+FROM gradle:jdk17 as builder
 MAINTAINER MJG <mehdi.jaqir.pro@gmail.com>
 
 COPY --chown=gradle:gradle $basePath /tmp/app

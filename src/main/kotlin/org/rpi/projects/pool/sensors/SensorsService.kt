@@ -10,7 +10,6 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
-import reactor.core.publisher.toFlux
 
 /**
  * @author mehdi.jaqirgranger
@@ -44,5 +43,5 @@ class SensorsService(private val applicationEventPublisher: ApplicationEventPubl
         }
     }
 
-    fun getLastReadSensorsValues(): Flux<SensorValue> = lastReadSensorsValues.toFlux()
+    fun getLastReadSensorsValues(): Flux<SensorValue> = Flux.fromIterable(lastReadSensorsValues)
 }

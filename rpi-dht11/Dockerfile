@@ -1,13 +1,11 @@
-ARG baseImage
-
 FROM golang AS builder
 MAINTAINER MJG <mehdi.jaqir.pro@gmail.com>
 
 COPY . /tmp/app
 WORKDIR /tmp/app
 
-RUN go get -d -v -u github.com/pakohan/dht
-RUN go generate github.com/pakohan/dht
+RUN go mod download
+RUN go mod verify
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-extldflags "-static"' -o app .
 
 #------------------------------------------------------------------------------------------

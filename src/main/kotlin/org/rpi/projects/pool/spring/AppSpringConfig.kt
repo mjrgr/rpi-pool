@@ -4,18 +4,14 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import mu.KLogging
 import org.rpi.projects.pool.model.ApiError
-import org.rpi.projects.pool.model.SensorValue
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.support.ConversionServiceFactoryBean
 import org.springframework.core.Ordered
 import org.springframework.core.ResolvableType
 import org.springframework.core.annotation.Order
 import org.springframework.core.codec.Hints
-import org.springframework.core.convert.ConversionService
-import org.springframework.core.convert.converter.Converter
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.codec.json.Jackson2JsonEncoder
@@ -45,13 +41,13 @@ class AppSpringConfig : AsyncConfigurer {
 
     companion object : KLogging()
 
-    @Bean
-    fun conversionService(): ConversionService = ConversionServiceFactoryBean().apply {
-        setConverters(setOf(Converter<Int, SensorValue> {
-            SensorValue("", it.toLong(), "")
-        }))
-        afterPropertiesSet()
-    }.`object`!!
+//    @Bean
+//    fun conversionService(): ConversionService = ConversionServiceFactoryBean().apply {
+//        setConverters(setOf(Converter<Int, SensorValue> {
+//            SensorValue("", it.toLong(), "")
+//        }))
+//        afterPropertiesSet()
+//    }.`object`!!
 
     @Bean
     fun restTemplate() = RestTemplate()
@@ -95,14 +91,14 @@ class AppSpringConfig : AsyncConfigurer {
             return writeBodyJson(ex, exchange)
         }
 
-        fun writeBodyJson(ex: Throwable, exchange: ServerWebExchange): Mono<Void> = with(ApiError(exchange.response.statusCode!!, exchange.request.uri.toString(), ex.message!!)) {
+        fun writeBodyJson(ex: Throwable, exchange: ServerWebExchange): Mono<Void> = with(ApiError(HttpStatus.valueOf(exchange.response.statusCode.value()), exchange.request.uri.toString(), ex.message!!)) {
             logger.error { "Handled error: $this" }
             exchange.response.writeWith(
                     Jackson2JsonEncoder().encode(
                             Mono.just(this),
                             exchange.response.bufferFactory(),
                             ResolvableType.forInstance(this),
-                            MediaType.APPLICATION_JSON_UTF8,
+                            MediaType.APPLICATION_JSON,
                             Hints.from(Hints.LOG_PREFIX_HINT, exchange.logPrefix))
             )
         }

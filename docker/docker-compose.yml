@@ -7,7 +7,7 @@ services:
       dockerfile: docker/rpi-ws/Dockerfile
       args:
         basePath: ${SCRIPT_PATH}
-        baseImage: openjdk:8-jre-alpine
+        baseImage: azul/zulu-openjdk-alpine:17-jre
     container_name: rpi-pool
     restart: always
     networks:

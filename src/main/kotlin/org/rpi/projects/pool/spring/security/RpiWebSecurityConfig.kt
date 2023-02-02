@@ -28,7 +28,7 @@ class SecurityConfig(private val rpiProperties: RpiProperties,
                      val jwtTokenService: JwtTokenService) {
 
     @Bean
-    fun passwordEncoder() = Pbkdf2PasswordEncoder(rpiProperties.passwordEncoder.secret, rpiProperties.passwordEncoder.iteration.toInt(), rpiProperties.passwordEncoder.keylength.toInt())
+    fun passwordEncoder() = Pbkdf2PasswordEncoder(rpiProperties.passwordEncoder.secret, rpiProperties.passwordEncoder.iteration.toInt(), rpiProperties.passwordEncoder.keylength.toInt(), Pbkdf2PasswordEncoder.SecretKeyFactoryAlgorithm.PBKDF2WithHmacSHA1)
 
     @Bean
     fun reactiveAuthenticationManager() = RpiAuthenticationManager(jwtTokenService, userDetailsService)

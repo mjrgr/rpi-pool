@@ -6,7 +6,7 @@ import org.rpi.projects.pool.starter.RpiPoolStarter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
-import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
@@ -26,10 +26,10 @@ abstract class RpiIntegrationTest {
 
     val webClient: WebTestClient by lazy {
         WebTestClient
-                .bindToServer()
-                .baseUrl("http://localhost:$port/api/v1")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tockenService.generateToken("admin")}")
-                .build()
+            .bindToServer()
+            .baseUrl("http://localhost:$port/api/v1")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer ${tockenService.generateToken("admin")}")
+            .build()
     }
 }

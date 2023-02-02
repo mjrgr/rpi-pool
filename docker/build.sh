@@ -24,3 +24,4 @@ done
 
 commands_exists docker docker-compose
 docker-compose ${DC_FILES} build --compress --force-rm
+docker-compose ${DC_FILES} up

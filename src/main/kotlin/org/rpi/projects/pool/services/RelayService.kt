@@ -4,24 +4,26 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.pi4j.component.relay.RelayState
 import com.pi4j.io.gpio.GpioController
+import jakarta.annotation.PostConstruct
+import jakarta.annotation.PreDestroy
 import mu.KLogging
 import org.rpi.projects.pool.ext.withProvisionedPin
 import org.rpi.projects.pool.model.*
 import org.rpi.projects.pool.model.RpiRelayActionEnum.OFF
 import org.rpi.projects.pool.spring.RpiProperties
 import org.springframework.stereotype.Service
-import reactor.core.publisher.toFlux
+import reactor.core.publisher.Flux
 import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
-import javax.annotation.PreDestroy
 
 /**
  * @author mehdi.jaqirgranger
  */
 @Service
-class RelayService(private val rpiProperties: RpiProperties,
-                   private val controller: GpioController,
-                   private val objectMapper: ObjectMapper) {
+class RelayService(
+    private val rpiProperties: RpiProperties,
+    private val controller: GpioController,
+    private val objectMapper: ObjectMapper
+) {
 
     companion object : KLogging()
 
@@ -41,7 +43,7 @@ class RelayService(private val rpiProperties: RpiProperties,
             throw RpiRuntimeException("Pool relays config cannot be null")
         } else {
             relays.firstOrNull { RpiRelayType.PUMP == it.type }
-                    ?: RpiRuntimeException("you must declare at least one pump")
+                ?: RpiRuntimeException("you must declare at least one pump")
             setAllRelaysStates(OFF)
         }
     }
@@ -77,10 +79,10 @@ class RelayService(private val rpiProperties: RpiProperties,
 
     fun getRelayState(rpiRelayDto: RpiRelayDto): RelayState = getRelayState(getRelayById(rpiRelayDto.id))
 
-    fun getRelays() = relays.map { cfg ->
+    fun getRelays() = Flux.fromIterable(relays.map { cfg ->
         cfg.toDto(getRelayState(cfg))
-    }.toFlux()
+    })
 
     private fun getRelayById(id: String) = relays.firstOrNull { it.id == id }
-            ?: throw RpiRuntimeException("Relay $id not found")
+        ?: throw RpiRuntimeException("Relay $id not found")
 }

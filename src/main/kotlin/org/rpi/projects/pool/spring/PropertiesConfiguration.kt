@@ -1,18 +1,16 @@
 package org.rpi.projects.pool.spring
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import org.rpi.projects.pool.model.SensorValue
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.Resource
 import org.springframework.stereotype.Component
-import java.math.BigDecimal
 import java.math.BigInteger
 
 @Component
 @ConfigurationProperties(prefix = "rpi")
 class RpiProperties {
     var realGpio: Boolean = true
+
     @JsonIgnore
     val config = ConfigProperties()
     val jwt = JwtProperties()
@@ -44,6 +42,6 @@ class RpiProperties {
     class Dht11Properties {
         lateinit var pyScript: String
         lateinit var url: String
-        lateinit var temperatureThreshold: SensorValue
+        lateinit var temperatureThreshold: Integer
     }
 }

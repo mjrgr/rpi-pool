@@ -18,7 +18,7 @@ class DevConfig(val rpiProperties: RpiProperties) : WebFluxConfigurer, CommandLi
         rpiProperties.dht11.let {
             with(File(it.pyScript)) {
                 if (!exists()) {
-                    javaClass.getResourceAsStream("/script/dht11.py").copyTo(outputStream())
+                    DevConfig.javaClass.getResourceAsStream("/script/dht11.py").copyTo(outputStream())
                     logger.info { "Created mocked DHT11 mocked script: ${it.pyScript}" }
                 }
             }

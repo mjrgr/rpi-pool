@@ -12,6 +12,7 @@ import org.rpi.projects.pool.services.RelayService
 import org.rpi.projects.pool.spring.RpiProperties
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.event.EventListener
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Flux
@@ -46,7 +47,7 @@ class Dht11SensorReader(val rpiProperties: RpiProperties) : SensorReader {
     }
 
     val dht11FallbackCmd: ProcessBuilder by lazy {
-        ProcessBuilder().command("python", rpiProperties.dht11.pyScript, "--no-ws", if (rpiProperties.realGpio) "--no-mock" else "--mock")
+        ProcessBuilder().command("python2", rpiProperties.dht11.pyScript, "--no-ws", if (rpiProperties.realGpio) "--no-mock" else "--mock")
     }
 
     override val name: String = DHT11
@@ -60,8 +61,8 @@ class Dht11SensorReader(val rpiProperties: RpiProperties) : SensorReader {
 
     private fun fromDHT11Value(value: String): Flux<SensorValue> = try {
         value.split('|').let {
-            return Flux.just(SensorValue(TEMPERATURE, it[0].toLong(), CELCIUS),
-                    SensorValue(HUMIDITY, it[1].toLong(), PERCENT))
+            return Flux.just(SensorValue(TEMPERATURE, it[0].toInt(), CELCIUS),
+                    SensorValue(HUMIDITY, it[1].toInt(), PERCENT))
         }
     } catch (ex: Exception) {
         throw IllegalArgumentException("DHT11 value $value has not the expected format %d|%d", ex)
@@ -72,7 +73,7 @@ class Dht11SensorReader(val rpiProperties: RpiProperties) : SensorReader {
 @Component
 class Dht11SensorListener(private val rpiProperties: RpiProperties,
                           private val relayService: RelayService,
-                          private val notifierService: NotifierService) {
+                          private val notifierService: NotifierService, private val passwordEncoder: PasswordEncoder) {
 
     companion object : KLogging()
 
@@ -81,9 +82,8 @@ class Dht11SensorListener(private val rpiProperties: RpiProperties,
 
     private fun handleTemperature(temp: SensorValue) {
         logger.info { "Temperature value: $temp | threshold is ${rpiProperties.dht11.temperatureThreshold}" }
-
         relayService.getRelays().filter { RpiRelayType.PUMP == it.type }.subscribe {
-            if (temp < rpiProperties.dht11.temperatureThreshold) {
+            if (temp.value < rpiProperties.dht11.temperatureThreshold.toInt()) {
                 if (it.state) {
                     logger.info { "Pump is already on, nothing to do" }
                 } else {

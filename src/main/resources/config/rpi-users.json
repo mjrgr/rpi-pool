@@ -1,12 +1,12 @@
 [
   {
     "username": "admin",
-    "password": "c79f1ed997f9f11d69ce8f7b3e7efc3603b4de97f66f2642c17ea0dd6f71f5c8a4d442c209defe59",
+    "password": "02d69de87a1be040a0f28f7825443ba5ff1aa553e9eaffce35b61751098bfbc85ff783de48153fce5ef98cba6de7a4ff4e40be2a",
     "admin": "true"
   },
   {
     "username": "mehdi",
-    "password": "ee054dc61d051eda1338a352440151149ac979b4cb9347e75559efd94aea88bf9e59bdfcc2028174",
+    "password": "02d69de87a1be040a0f28f7825443ba5ff1aa553e9eaffce35b61751098bfbc85ff783de48153fce5ef98cba6de7a4ff4e40be2a",
     "admin": "false"
   }
 ]

@@ -1,7 +1,3 @@
-spring:
-  profiles:
-    include: swagger
-
 rpi:
   real-gpio: false
   pool-config: rpi-pool.json

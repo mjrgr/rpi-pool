@@ -40,7 +40,7 @@ enum class RpiRelayType {
     PUMP, LIGHT, CUSTOM;
 }
 
-data class SensorValue(val name: String, val value: Long, val unit: String) {
+data class SensorValue(val name: String, val value: Int, val unit: String) {
     operator fun compareTo(other: SensorValue): Int = value.compareTo(other.value)
     override fun toString(): String {
         return "[$value$unit]"
