@@ -36,13 +36,14 @@ apply {
 }
 
 application {
-    mainClassName = "org.rpi.projects.pool.starter.RpiPoolStarterKt"
+    mainClass.set("org.rpi.projects.pool.starter.RpiPoolStarterKt")
     applicationName = "rpi-pool"
 }
 
 distributions {
-    getByName("main") {
-        //baseName = "rpi-pool"
+
+    main {
+
     }
 }
 
@@ -69,7 +70,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security:${project.extra["springBootVersion"]}")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.extra["jacksonVersion"]}")
     // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
-    implementation ("javax.xml.bind:jaxb-api:2.3.1")
+    implementation("javax.xml.bind:jaxb-api:2.3.1")
 
 
     implementation("io.jsonwebtoken:jjwt:${project.extra["jwtVersion"]}")
@@ -106,5 +107,5 @@ tasks {
         }
     }
     getByName<Tar>("distTar").enabled = false
-    getByName<Zip>("distZip").archiveName = "${project.name}.zip"
+    getByName<Zip>("distZip").archiveFileName.set("${project.name}.zip")
 }

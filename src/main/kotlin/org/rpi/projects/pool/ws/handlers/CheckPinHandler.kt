@@ -18,28 +18,28 @@ import reactor.core.publisher.Mono
 class CheckPinHandler(private val controller: GpioController) {
 
     fun getState(sr: ServerRequest) = withRequest(sr) {
-        ServerResponse.ok().body(BodyInserters.fromObject(it.state))
+        ServerResponse.ok().body(BodyInserters.fromValue(it.state))
     }
 
     fun toggleState(sr: ServerRequest) = withRequest(sr) {
         it.toggle()
-        ServerResponse.ok().body(BodyInserters.fromObject("Toggle of ${it.name} ok"))
+        ServerResponse.ok().body(BodyInserters.fromValue("Toggle of ${it.name} ok"))
     }
 
     fun lowState(sr: ServerRequest) = withRequest(sr) {
         it.low()
-        ServerResponse.ok().body(BodyInserters.fromObject("Low of ${it.name} ok"))
+        ServerResponse.ok().body(BodyInserters.fromValue("Low of ${it.name} ok"))
     }
 
     fun highState(sr: ServerRequest) = withRequest(sr) {
         it.high()
-        ServerResponse.ok().body(BodyInserters.fromObject("High of ${it.name} ok"))
+        ServerResponse.ok().body(BodyInserters.fromValue("High of ${it.name} ok"))
     }
 
     private fun withRequest(request: ServerRequest, block: (GpioPinDigitalOutput) -> Mono<ServerResponse>): Mono<ServerResponse> {
         val number = request.pathVariable("number")
         RaspiPin.getPinByName("GPIO $number")?.let {
                 return block(controller.provisionDigitalOutputPin(it))
-        } ?: return ServerResponse.status(HttpStatus.NOT_FOUND).body(BodyInserters.fromObject("Pin with number $number not found"))
+        } ?: return ServerResponse.status(HttpStatus.NOT_FOUND).body(BodyInserters.fromValue("Pin with number $number not found"))
     }
 }

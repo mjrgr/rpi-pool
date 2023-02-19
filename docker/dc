@@ -17,11 +17,14 @@ error() {
     echo -e "\033[33;31m \nError: $@\n\033[33;0m"; exit 1
 }
 
-for profile in "$@"
-do
-    export DC_FILES="$DC_FILES -f docker-compose-$profile.yml"
-done
+ACTION="${1:-build}"
+PROFILE=${2:-}
+if [ -z "${PROFILE}" ];
+then
+  PROFILE_DC_FILE=""
+else
+  PROFILE_DC_FILE=" -f docker-compose-$PROFILE.yml"
+fi
 
 commands_exists docker docker-compose
-docker-compose ${DC_FILES} build --compress --force-rm
-docker-compose ${DC_FILES} up
+docker-compose ${PROFILE_DC_FILE} ${ACTION}

@@ -1,21 +1,20 @@
 ARG basePath
-ARG baseImage
 
-FROM gradle:jdk17 as builder
+FROM azul/zulu-openjdk-alpine:17 as builder
 MAINTAINER MJG <mehdi.jaqir.pro@gmail.com>
 
 COPY --chown=gradle:gradle $basePath /tmp/app
 WORKDIR /tmp/app
-RUN gradle clean build -x test
+RUN ./gradlew clean build -x test
 WORKDIR /tmp/app/build/distributions
-RUN unzip rpi-projects.zip && rm -rf rpi-projects.zip
+RUN unzip rpi-pool.zip && rm -rf rpi-pool.zip
 
 #------------------------------------------------------------------------------------------
-FROM $baseImage
+FROM azul/zulu-openjdk-alpine:17-jre
 
 EXPOSE 9000
 
-COPY --from=builder /tmp/app/build/distributions/rpi-projects /app/
+COPY --from=builder /tmp/app/build/distributions/rpi-pool /app/
 COPY --from=builder /tmp/app/docker/rpi-ws/lib/libwiringPi.so /usr/lib/libwiringPi.so
 COPY --from=builder /tmp/app/docker/rpi-ws/lib/libwiringPiDev.so /usr/lib/libwiringPiDev.so
 

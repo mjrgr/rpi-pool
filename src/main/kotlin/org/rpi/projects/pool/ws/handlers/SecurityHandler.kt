@@ -26,6 +26,6 @@ class SecurityHandler(val userDetailsService: RpiUserDetailsService,
             }
         }
     }.flatMap {
-        ServerResponse.ok().syncBody(UserWithToken(jwtTokenService.generateToken(it)))
+        ServerResponse.ok().bodyValue(UserWithToken(jwtTokenService.generateToken(it)))
     }
 }

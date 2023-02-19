@@ -1,1 +1,1 @@
-rootProject.name = "rpi-projects"
+rootProject.name = "rpi-pool"
