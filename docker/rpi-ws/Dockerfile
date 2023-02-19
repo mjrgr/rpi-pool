@@ -3,7 +3,7 @@ ARG basePath
 FROM azul/zulu-openjdk-alpine:17 as builder
 MAINTAINER MJG <mehdi.jaqir.pro@gmail.com>
 
-COPY --chown=gradle:gradle $basePath /tmp/app
+COPY $basePath /tmp/app
 WORKDIR /tmp/app
 RUN ./gradlew clean build -x test
 WORKDIR /tmp/app/build/distributions

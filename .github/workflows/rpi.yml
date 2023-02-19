@@ -18,4 +18,4 @@ jobs:
       - name: Run build with Gradle Wrapper
         run: ./gradlew build
       - name: Run build with Docker Compose
-        run: ./docker/dcbuild
+        run: ./docker/dc build

@@ -26,5 +26,6 @@ else
   PROFILE_DC_FILE=" -f docker-compose-$PROFILE.yml"
 fi
 
+cd ${SCRIPT_PATH}
 commands_exists docker docker-compose
 docker-compose ${PROFILE_DC_FILE} ${ACTION}
